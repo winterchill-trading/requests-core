@@ -38,3 +38,6 @@ module Notice = Notice
 
 (** Paying a request or a link as an intraledger transfer. *)
 module Settlement = Settlement
+
+(** The money request state machine. *)
+module Request = Request
