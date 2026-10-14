@@ -36,6 +36,7 @@ type t =
       ; sum : Money.Amount.t
       } (** the shares (the owner's included) do not add up to the total *)
   | Nothing_to_remind (** no share of the split is pending *)
+  | Same_account (** the payer would pay into the account the money comes from *)
   | Insufficient_funds of
       { available : Money.Amount.t
       ; required : Money.Amount.t

@@ -32,6 +32,7 @@ type t =
       ; sum : Money.Amount.t
       }
   | Nothing_to_remind
+  | Same_account
   | Insufficient_funds of
       { available : Money.Amount.t
       ; required : Money.Amount.t
