@@ -25,7 +25,9 @@ let check t =
     else Or_error.error_s [%message "span must be positive" name (span : Time_ns.Span.t)]
   in
   let positive name n =
-    if n > 0 then Ok () else Or_error.error_s [%message "limit must be positive" name (n : int)]
+    if n > 0
+    then Ok ()
+    else Or_error.error_s [%message "limit must be positive" name (n : int)]
   in
   Or_error.combine_errors_unit
     [ positive_span "request_lifetime" t.request_lifetime

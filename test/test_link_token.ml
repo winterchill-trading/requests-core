@@ -41,7 +41,9 @@ let%test_unit "every 32-byte string encodes to a token that parses back" =
     ~sexp_of:String.sexp_of_t
     ~f:(fun bytes ->
       let t = Link_token.of_random_bytes bytes |> Or_error.ok_exn in
-      [%test_result: int] ~expect:Link_token.length (String.length (Link_token.to_string t));
+      [%test_result: int]
+        ~expect:Link_token.length
+        (String.length (Link_token.to_string t));
       [%test_result: Link_token.t]
         ~expect:t
         (Link_token.of_string (Link_token.to_string t) |> Or_error.ok_exn))

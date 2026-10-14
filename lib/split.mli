@@ -1,7 +1,7 @@
 (** A bill split: the owner paid a shared expense and asks each participant for their
-    share. Each share is an ordinary {!Request} tagged with the split's id, so it is
-    paid, declined, cancelled, reminded and expired like any other request; the split
-    itself only records the plan and derives its status from the shares:
+    share. Each share is an ordinary {!Request} tagged with the split's id, so it is paid,
+    declined, cancelled, reminded and expired like any other request; the split itself
+    only records the plan and derives its status from the shares:
 
     - [Open] while any share is pending;
     - [Settled] when every share was paid;
@@ -23,9 +23,9 @@ module Equal_shares : sig
 end
 
 (** Divides [total] between the owner and [others] participants. Refuses a non-positive
-    total and fewer than one or more than [policy.max_split_participants]
-    participants. When the total has fewer minor units than there are people,
-    [other_share] is zero and {!create} refuses such shares. *)
+    total and fewer than one or more than [policy.max_split_participants] participants.
+    When the total has fewer minor units than there are people, [other_share] is zero and
+    {!create} refuses such shares. *)
 val equal_shares
   :  ?policy:Policy.t
   -> total:Money.Amount.t
@@ -65,10 +65,10 @@ module Created : sig
   [@@deriving sexp_of]
 end
 
-(** A split and its requests. Refuses: a non-positive total; no participants or more
-    than [policy.max_split_participants]; the owner as a participant; the same customer
-    twice; a share that is not positive or not in the total's currency; a negative own
-    share; and shares (the owner's included) that do not add up to the total. *)
+(** A split and its requests. Refuses: a non-positive total; no participants or more than
+    [policy.max_split_participants]; the owner as a participant; the same customer twice;
+    a share that is not positive or not in the total's currency; a negative own share; and
+    shares (the owner's included) that do not add up to the total. *)
 val create
   :  ?policy:Policy.t
   -> id:Split_id.t
@@ -109,10 +109,10 @@ end
     {!Request.val-status}). Fails when a share's request is missing from [requests]. *)
 val summary : t -> requests:Request.t list -> now:Time_ns.t -> Summary.t Or_error.t
 
-(** Reminds every pending share that may be reminded now; the steps are the requests'
-    own reminder steps. Refuses a caller other than the owner, a split with nothing
-    pending ([Nothing_to_remind]), and, when no pending share may be reminded yet, gives
-    the refusal of the one that becomes remindable first. *)
+(** Reminds every pending share that may be reminded now; the steps are the requests' own
+    reminder steps. Refuses a caller other than the owner, a split with nothing pending
+    ([Nothing_to_remind]), and, when no pending share may be reminded yet, gives the
+    refusal of the one that becomes remindable first. *)
 val remind
   :  ?policy:Policy.t
   -> t

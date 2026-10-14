@@ -64,12 +64,9 @@ let%expect_test "booking twice gives identical entries, which the ledger books o
   let first = Settlement.book b i ~authorization ~at:(after_min 1) |> Or_error.ok_exn in
   let b' = Payments_core.Booking.apply b first.entries |> Or_error.ok_exn in
   let again = Settlement.book b i ~authorization ~at:(after_min 1) |> Or_error.ok_exn in
-  print_s
-    [%sexp (List.equal Ledger.Entry.equal first.entries again.entries : bool)];
+  print_s [%sexp (List.equal Ledger.Entry.equal first.entries again.entries : bool)];
   (* The balances refuse keys they have booked, so the money moves once. *)
-  print_s
-    [%sexp
-      (Payments_core.Booking.apply b' again.entries |> Result.is_ok : bool)];
+  print_s [%sexp (Payments_core.Booking.apply b' again.entries |> Result.is_ok : bool)];
   [%expect {|
     true
     false
@@ -81,8 +78,7 @@ let%expect_test "insufficient funds is a typed refusal" =
   let i = instruction "12.50" in
   print_s [%sexp (Settlement.check_funds b i : (unit, Refusal.t) Result.t)];
   print_s
-    [%sexp
-      (Settlement.book b i ~authorization ~at:(after_min 1) |> Result.is_ok : bool)];
+    [%sexp (Settlement.book b i ~authorization ~at:(after_min 1) |> Result.is_ok : bool)];
   [%expect
     {|
     (Error (Insufficient_funds (available "10.00 EUR") (required "12.50 EUR")))

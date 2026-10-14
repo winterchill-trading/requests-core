@@ -1,6 +1,6 @@
-(** The limits a service chooses. {!default} holds common retail values; every
-    function that needs a limit takes the policy explicitly, so tests and different
-    markets can set their own. *)
+(** The limits a service chooses. {!default} holds common retail values; every function
+    that needs a limit takes the policy explicitly, so tests and different markets can set
+    their own. *)
 
 open! Core
 
@@ -20,6 +20,6 @@ type t =
     splits of up to 20 participants. *)
 val default : t
 
-(** Fails on a non-positive lifetime or limit, or a negative reminder gap (zero turns
-    the throttle off). *)
+(** Fails on a non-positive lifetime or limit, or a negative reminder gap (zero turns the
+    throttle off). *)
 val check : t -> unit Or_error.t

@@ -3,7 +3,10 @@ open! Core
 let max_length = 35
 
 let normalise s =
-  String.map s ~f:(fun c -> if Char.is_whitespace c || Char.to_int c < 0x20 || Char.to_int c = 0x7f then ' ' else c)
+  String.map s ~f:(fun c ->
+    if Char.is_whitespace c || Char.to_int c < 0x20 || Char.to_int c = 0x7f
+    then ' '
+    else c)
   |> String.split ~on:' '
   |> List.filter ~f:(fun w -> not (String.is_empty w))
   |> String.concat ~sep:" "

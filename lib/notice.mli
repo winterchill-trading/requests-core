@@ -1,9 +1,9 @@
-(** Something a customer should hear about, as a value. The library never sends
-    anything: each transition returns its notices and the service renders and delivers
-    them (an activity feed, a push message, an e-mail) in the recipient's language.
+(** Something a customer should hear about, as a value. The library never sends anything:
+    each transition returns its notices and the service renders and delivers them (an
+    activity feed, a push message, an e-mail) in the recipient's language.
 
-    {!key} is unique per notice and stable across retries, so a service can store
-    notices idempotently next to the state change that produced them. *)
+    {!key} is unique per notice and stable across retries, so a service can store notices
+    idempotently next to the state change that produced them. *)
 
 open! Core
 

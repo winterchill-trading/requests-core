@@ -4,10 +4,10 @@
 
     Writes are inserts that are atomic on their keys and compare-and-set updates, so two
     workers acting on the same request or link cannot both succeed: the loser re-reads,
-    re-applies the command to the fresh value (which usually refuses it) and tries
-    again. The ledger journal is not here; a service books {!Settlement} entries in the
-    same transaction as the update that produced them, or outside it with the
-    settlement key as the guard against booking twice. *)
+    re-applies the command to the fresh value (which usually refuses it) and tries again.
+    The ledger journal is not here; a service books {!Settlement} entries in the same
+    transaction as the update that produced them, or outside it with the settlement key as
+    the guard against booking twice. *)
 
 open! Core
 
@@ -22,9 +22,9 @@ module type S = sig
   (** Atomic on the id: [`Exists] returns the stored request and writes nothing. *)
   val insert_request : t -> Request.t -> [ `Inserted | `Exists of Request.t ] io
 
-  (** Compare-and-set: replaces [expected] with [next] (same id) only if the stored
-      value still equals [expected]; otherwise returns what is stored ([None] when the
-      request does not exist) and writes nothing. *)
+  (** Compare-and-set: replaces [expected] with [next] (same id) only if the stored value
+      still equals [expected]; otherwise returns what is stored ([None] when the request
+      does not exist) and writes nothing. *)
   val update_request
     :  t
     -> expected:Request.t
@@ -33,8 +33,8 @@ module type S = sig
 
   val find_request : t -> Request_id.t -> Request.t option io
 
-  (** The customer's requests on one side, newest first (by creation time, then id),
-      at most [limit]. *)
+  (** The customer's requests on one side, newest first (by creation time, then id), at
+      most [limit]. *)
   val requests_of
     :  t
     -> Customer_id.t
@@ -52,15 +52,16 @@ module type S = sig
   (** {2 Payment links} *)
 
   (** Atomic on both the id and the token. *)
-  val insert_link
-    :  t
-    -> Link.t
-    -> [ `Inserted | `Exists of Link.t | `Token_taken ] io
+  val insert_link : t -> Link.t -> [ `Inserted | `Exists of Link.t | `Token_taken ] io
 
-  (** Compare-and-set, as {!update_request}. Two payers racing on one link both read
-      the same value; one update wins and the other retries on the fresh value, so a
-      cap or the one-payment-per-payer rule cannot be passed by a race. *)
-  val update_link : t -> expected:Link.t -> Link.t -> [ `Updated | `Stale of Link.t option ] io
+  (** Compare-and-set, as {!update_request}. Two payers racing on one link both read the
+      same value; one update wins and the other retries on the fresh value, so a cap or
+      the one-payment-per-payer rule cannot be passed by a race. *)
+  val update_link
+    :  t
+    -> expected:Link.t
+    -> Link.t
+    -> [ `Updated | `Stale of Link.t option ] io
 
   val find_link : t -> Link_id.t -> Link.t option io
   val find_link_by_token : t -> Link_token.t -> Link.t option io
@@ -70,9 +71,9 @@ module type S = sig
 
   (** {2 Splits} *)
 
-  (** Inserts the split and its share requests together, all or nothing. [`Exists]
-      returns the stored split. A share request whose id is already taken makes the
-      whole insert fail with [`Request_exists]. *)
+  (** Inserts the split and its share requests together, all or nothing. [`Exists] returns
+      the stored split. A share request whose id is already taken makes the whole insert
+      fail with [`Request_exists]. *)
   val insert_split
     :  t
     -> Split.t
@@ -90,10 +91,5 @@ module type S = sig
   val add_notices : t -> Notice.t list -> unit io
 
   (** The recipient's notices at or after [since], newest first, at most [limit]. *)
-  val notices_for
-    :  t
-    -> Customer_id.t
-    -> since:Time_ns.t
-    -> limit:int
-    -> Notice.t list io
+  val notices_for : t -> Customer_id.t -> since:Time_ns.t -> limit:int -> Notice.t list io
 end

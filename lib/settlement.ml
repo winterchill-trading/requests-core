@@ -31,7 +31,9 @@ module Instruction = struct
     in
     let%map () =
       if Ledger.Account_id.equal from to_
-      then Or_error.error_s [%message "payer and payee accounts are the same" (from : Ledger.Account_id.t)]
+      then
+        Or_error.error_s
+          [%message "payer and payee accounts are the same" (from : Ledger.Account_id.t)]
       else Ok ()
     in
     let reference = Option.value_map note ~default:"" ~f:Note.to_string in
@@ -39,7 +41,14 @@ module Instruction = struct
   ;;
 
   let for_request id ~payer ~from ~payee ~to_ ~amount ~note =
-    create ~key:("request:" ^ Request_id.to_string id) ~payer ~from ~payee ~to_ ~amount ~note
+    create
+      ~key:("request:" ^ Request_id.to_string id)
+      ~payer
+      ~from
+      ~payee
+      ~to_
+      ~amount
+      ~note
   ;;
 
   let for_link id ~(payer : Party.t) ~from ~payee ~to_ ~amount ~note =
@@ -100,7 +109,8 @@ let book ?(chart = Booking.Chart.default) balances (i : Instruction.t) ~authoriz
   let event_id = Ledger.Idempotency_key.to_string i.key in
   let%bind beneficiary =
     Beneficiary.create
-      ~id:(Beneficiary.Id.of_string ("customer:" ^ Customer_id.to_string i.payee.customer))
+      ~id:
+        (Beneficiary.Id.of_string ("customer:" ^ Customer_id.to_string i.payee.customer))
       ~owner:(Customer_id.to_string i.payer.customer)
       ~name:i.payee.name
       ~rail:Intraledger
@@ -119,10 +129,14 @@ let book ?(chart = Booking.Chart.default) balances (i : Instruction.t) ~authoriz
       ()
   in
   let%bind authorized = authorize draft authorization ~at in
-  let%bind hold = Booking.transition chart balances authorized ~to_:Submitted ~event_id ~at in
+  let%bind hold =
+    Booking.transition chart balances authorized ~to_:Submitted ~event_id ~at
+  in
   let%bind balances = Booking.apply balances hold in
   let%bind submitted = Transfer.submit authorized ~at () in
-  let%bind capture = Booking.transition chart balances submitted ~to_:Settled ~event_id ~at in
+  let%bind capture =
+    Booking.transition chart balances submitted ~to_:Settled ~event_id ~at
+  in
   let%bind balances = Booking.apply balances capture in
   let%bind outgoing = Transfer.transition submitted ~to_:Settled ~at in
   let%bind incoming =
@@ -131,8 +145,7 @@ let book ?(chart = Booking.Chart.default) balances (i : Instruction.t) ~authoriz
       ~rail:Intraledger
       ~account:i.to_
       ~from:
-        (External
-           { name = i.payer.name; detail = Ledger.Account_id.to_string i.from })
+        (External { name = i.payer.name; detail = Ledger.Account_id.to_string i.from })
       ~amount:i.amount
       ~reference:i.reference
       ~status:Settled

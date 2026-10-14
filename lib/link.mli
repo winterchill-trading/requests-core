@@ -1,5 +1,5 @@
-(** A payment link: a customer shares a token, and other customers of the institution
-    pay into one of the owner's accounts through it.
+(** A payment link: a customer shares a token, and other customers of the institution pay
+    into one of the owner's accounts through it.
 
     A link is single-use (completed after one payment) or multi-use (optionally capped at
     a number of payments). Its amount is fixed, or left to each payer. Each payer pays a
@@ -8,8 +8,8 @@
     [Expired] at once.
 
     Strangers see a link only through {!public_view}, which shows the owner's display
-    name, the amount and the note while the link can be paid, and only the reason once
-    it cannot. *)
+    name, the amount and the note while the link can be paid, and only the reason once it
+    cannot. *)
 
 open! Core
 
@@ -65,8 +65,8 @@ type t = private
   }
 [@@deriving sexp_of, compare, equal]
 
-(** A new active link. Refuses an amount that is not positive or not in [currency], and
-    a cap outside [1, policy.max_link_uses]. *)
+(** A new active link. Refuses an amount that is not positive or not in [currency], and a
+    cap outside [1, policy.max_link_uses]. *)
 val create
   :  ?policy:Policy.t
   -> id:Link_id.t
@@ -108,8 +108,8 @@ end
     [now] ([Link_not_active]); the account is in the link's currency
     ([Currency_mismatch]); then the amount: a fixed link takes no amount or the same one
     ([Amount_fixed]), an open link needs a positive one ([Amount_required],
-    [Amount_not_positive]). The payment is recorded at once and the link completes when
-    it reaches its cap; book the returned settlement in the same transaction. *)
+    [Amount_not_positive]). The payment is recorded at once and the link completes when it
+    reaches its cap; book the returned settlement in the same transaction. *)
 val pay
   :  t
   -> payer:Party.t

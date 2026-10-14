@@ -22,7 +22,8 @@ let%expect_test "stable bin_prot digests" =
     ; "Split", [%bin_digest: Split.Stable.V1.t]
     ]
     ~f:(fun (name, digest) -> printf "%-15s %s\n" name digest);
-  [%expect {|
+  [%expect
+    {|
     Customer_id     d9a8da25d5656b016fb4dbdc2e4197fb
     Request_id      d9a8da25d5656b016fb4dbdc2e4197fb
     Link_id         d9a8da25d5656b016fb4dbdc2e4197fb
@@ -74,12 +75,19 @@ let%test_unit "requests, links, splits and notices round-trip" =
     |> ok
   in
   let module R = Request.Stable.V1 in
-  List.iter [ r; step.request ] ~f:(round_trip (module R) ~sexp_of:R.sexp_of_t ~of_sexp:R.t_of_sexp ~equal:R.equal);
+  List.iter
+    [ r; step.request ]
+    ~f:(round_trip (module R) ~sexp_of:R.sexp_of_t ~of_sexp:R.t_of_sexp ~equal:R.equal);
   let module N = Notice.Stable.V1 in
-  List.iter (notices @ step.notices)
+  List.iter
+    (notices @ step.notices)
     ~f:(round_trip (module N) ~sexp_of:N.sexp_of_t ~of_sexp:N.t_of_sexp ~equal:N.equal);
   let module I = Settlement.Instruction.Stable.V1 in
-  round_trip (module I) ~sexp_of:I.sexp_of_t ~of_sexp:I.t_of_sexp ~equal:I.equal
+  round_trip
+    (module I)
+    ~sexp_of:I.sexp_of_t
+    ~of_sexp:I.t_of_sexp
+    ~equal:I.equal
     (Option.value_exn step.settlement);
   let l =
     Link.create
@@ -94,13 +102,21 @@ let%test_unit "requests, links, splits and notices round-trip" =
     |> ok
   in
   let paid =
-    (Link.pay l ~payer:bob ~from:(account bob) ~from_currency:Money.Currency.eur
-       ~amount:(eur "4.00") ~now:(after_min 2) ()
+    (Link.pay
+       l
+       ~payer:bob
+       ~from:(account bob)
+       ~from_currency:Money.Currency.eur
+       ~amount:(eur "4.00")
+       ~now:(after_min 2)
+       ()
      |> ok)
       .link
   in
   let module L = Link.Stable.V1 in
-  List.iter [ l; paid ] ~f:(round_trip (module L) ~sexp_of:L.sexp_of_t ~of_sexp:L.t_of_sexp ~equal:L.equal);
+  List.iter
+    [ l; paid ]
+    ~f:(round_trip (module L) ~sexp_of:L.sexp_of_t ~of_sexp:L.t_of_sexp ~equal:L.equal);
   let split =
     (Split.create
        ~id:(Split_id.of_string "s1")
@@ -125,14 +141,16 @@ let%test_unit "requests, links, splits and notices round-trip" =
 
 let%expect_test "decoding re-checks ids, notes and tokens" =
   let decode (type a) (module M : Binable.S with type t = a) s =
-    Result.is_ok (Result.try_with (fun () -> Binable.of_string (module M) (Binable.to_string (module String) s)))
+    Result.is_ok
+      (Result.try_with (fun () ->
+         Binable.of_string (module M) (Binable.to_string (module String) s)))
   in
   print_s
     [%sexp
       ([ decode (module Customer_id.Stable.V1) "ok-id"
-      ; decode (module Customer_id.Stable.V1) "not ok"
-      ; decode (module Note.Stable.V1) (String.make 36 'x')
-      ; decode (module Link_token.Stable.V1) "short"
+       ; decode (module Customer_id.Stable.V1) "not ok"
+       ; decode (module Note.Stable.V1) (String.make 36 'x')
+       ; decode (module Link_token.Stable.V1) "short"
        ]
        : bool list)];
   [%expect {| (true false false false) |}]

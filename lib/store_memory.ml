@@ -40,8 +40,8 @@ module Make (M : Monad.S) = struct
 
   let update_request t ~(expected : Request.t) (next : Request.t) =
     match Hashtbl.find t.requests expected.id with
-    | Some current when Request.equal current expected && Request_id.equal next.id expected.id
-      ->
+    | Some current
+      when Request.equal current expected && Request_id.equal next.id expected.id ->
       Hashtbl.set t.requests ~key:next.id ~data:next;
       return `Updated
     | current -> return (`Stale current)
@@ -65,7 +65,8 @@ module Make (M : Monad.S) = struct
 
   let requests_of_split t split =
     Hashtbl.data t.requests
-    |> List.filter ~f:(fun (r : Request.t) -> Option.exists r.split ~f:(Split_id.equal split))
+    |> List.filter ~f:(fun (r : Request.t) ->
+      Option.exists r.split ~f:(Split_id.equal split))
     |> return
   ;;
 
@@ -143,7 +144,8 @@ module Make (M : Monad.S) = struct
     Hashtbl.data t.splits
     |> List.filter ~f:(fun (s : Split.t) ->
       Customer_id.equal s.owner.customer customer
-      && Option.for_all source ~f:(fun src -> Option.equal String.equal s.source (Some src)))
+      && Option.for_all source ~f:(fun src ->
+        Option.equal String.equal s.source (Some src)))
     |> List.sort
          ~compare:
            (newest_first

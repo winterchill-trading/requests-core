@@ -1,11 +1,11 @@
 (** Moving the money when a request or a link is paid.
 
-    Both customers hold accounts at the same institution, so a payment is an
-    intraledger transfer booked through [payments-core]: an outgoing transfer from the
-    payer (a hold, captured at once into the intraledger settlement account) and an
-    incoming transfer to the payee (paid out of that settlement account). The settlement
-    account nets to zero after every payment; going through it keeps each side's
-    statement line a normal payment with its own transfer id.
+    Both customers hold accounts at the same institution, so a payment is an intraledger
+    transfer booked through [payments-core]: an outgoing transfer from the payer (a hold,
+    captured at once into the intraledger settlement account) and an incoming transfer to
+    the payee (paid out of that settlement account). The settlement account nets to zero
+    after every payment; going through it keeps each side's statement line a normal
+    payment with its own transfer id.
 
     Every ledger entry's idempotency key derives from the {!Instruction.key}
     ([request:<id>] for a request, [link:<id>:<payer>] for a link payment), and the
@@ -26,8 +26,8 @@ module Instruction : sig
     }
   [@@deriving sexp_of, compare, equal]
 
-  (** Paying a request; the key is [request:<id>]. Fails on a non-positive amount or
-      when both accounts are the same. *)
+  (** Paying a request; the key is [request:<id>]. Fails on a non-positive amount or when
+      both accounts are the same. *)
   val for_request
     :  Request_id.t
     -> payer:Party.t
@@ -85,12 +85,11 @@ module Booked : sig
 end
 
 (** The two settled transfers and their entries, checked against [balances].
-    [authorization] is how the payer authorised the payment (an SCA challenge the
-    service verified, or an exemption); it is kept on the outgoing transfer and its
-    entries. Fails like the ledger does (unknown account, insufficient funds); use
-    {!check_funds} first for a typed refusal. Append [entries] with
-    [Payments_core.Booking.post] (or [Ledger.Journal.append_linked]) so the three are
-    booked together or not at all. *)
+    [authorization] is how the payer authorised the payment (an SCA challenge the service
+    verified, or an exemption); it is kept on the outgoing transfer and its entries. Fails
+    like the ledger does (unknown account, insufficient funds); use {!check_funds} first
+    for a typed refusal. Append [entries] with [Payments_core.Booking.post] (or
+    [Ledger.Journal.append_linked]) so the three are booked together or not at all. *)
 val book
   :  ?chart:Payments_core.Booking.Chart.t
   -> Ledger.Balances.t

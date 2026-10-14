@@ -70,14 +70,18 @@ type t = Stable.V1.t =
 
 let key t =
   match t.event with
-  | Request_received { request; _ } -> sprintf "request:%s:received" (Request_id.to_string request)
+  | Request_received { request; _ } ->
+    sprintf "request:%s:received" (Request_id.to_string request)
   | Request_reminder { request; number; _ } ->
     sprintf "request:%s:reminder:%d" (Request_id.to_string request) number
-  | Request_paid { request; _ } -> sprintf "request:%s:paid" (Request_id.to_string request)
-  | Request_declined { request; _ } -> sprintf "request:%s:declined" (Request_id.to_string request)
+  | Request_paid { request; _ } ->
+    sprintf "request:%s:paid" (Request_id.to_string request)
+  | Request_declined { request; _ } ->
+    sprintf "request:%s:declined" (Request_id.to_string request)
   | Request_cancelled { request; _ } ->
     sprintf "request:%s:cancelled" (Request_id.to_string request)
-  | Request_expired { request; _ } -> sprintf "request:%s:expired" (Request_id.to_string request)
+  | Request_expired { request; _ } ->
+    sprintf "request:%s:expired" (Request_id.to_string request)
   | Link_paid { link; by; _ } ->
     sprintf "link:%s:paid:%s" (Link_id.to_string link) (Customer_id.to_string by.customer)
   | Link_completed { link; _ } -> sprintf "link:%s:completed" (Link_id.to_string link)

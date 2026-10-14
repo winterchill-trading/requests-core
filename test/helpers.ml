@@ -39,8 +39,8 @@ let apply_record b event =
 
 let ledger funded =
   let accounts =
-    Ledger.Account.create ~allow_negative:true clearing Asset
-    :: List.map funded ~f:(fun (p, _) -> Ledger.Account.create (account p) Liability)
+    (Ledger.Account.create ~allow_negative:true clearing Asset
+     :: List.map funded ~f:(fun (p, _) -> Ledger.Account.create (account p) Liability))
     @ Settlement.accounts [ Money.Currency.eur ]
   in
   let b =
@@ -51,20 +51,21 @@ let ledger funded =
     if Money.Amount.is_zero (eur amount)
     then b
     else (
-    let entry =
-      Ledger.Entry.create
-        ~idempotency_key:
-          (Ledger.Idempotency_key.of_string ("fund:" ^ Customer_id.to_string p.customer))
-        ~kind:(Transfer "deposit")
-        ~code:Deposit
-        ~effective_at:t0
-        ~recorded_at:t0
-        [ Ledger.Posting.debit clearing (eur amount)
-        ; Ledger.Posting.credit (account p) (eur amount)
-        ]
-      |> Or_error.ok_exn
-    in
-    apply_record b (Posted entry)))
+      let entry =
+        Ledger.Entry.create
+          ~idempotency_key:
+            (Ledger.Idempotency_key.of_string
+               ("fund:" ^ Customer_id.to_string p.customer))
+          ~kind:(Transfer "deposit")
+          ~code:Deposit
+          ~effective_at:t0
+          ~recorded_at:t0
+          [ Ledger.Posting.debit clearing (eur amount)
+          ; Ledger.Posting.credit (account p) (eur amount)
+          ]
+        |> Or_error.ok_exn
+      in
+      apply_record b (Posted entry)))
 ;;
 
 let print_entries entries =

@@ -1,14 +1,14 @@
-(** A money request: one customer (the requester) asks another (the payer) for an
-    amount, into one of the requester's accounts.
+(** A money request: one customer (the requester) asks another (the payer) for an amount,
+    into one of the requester's accounts.
 
     The lifecycle is in {!Request_status}. Everything here is pure: each operation takes
     the current value and the time and returns the next value, the {!Notice}s to deliver
-    and, for a payment, the {!Settlement.Instruction} to book. A service persists the
-    new value, books the settlement and stores the notices in one transaction, or drops
-    all three.
+    and, for a payment, the {!Settlement.Instruction} to book. A service persists the new
+    value, books the settlement and stores the notices in one transaction, or drops all
+    three.
 
-    A pending request reads as [Expired] as soon as its lifetime has passed ({!val-status}),
-    whether or not {!expire} has been applied and stored yet. *)
+    A pending request reads as [Expired] as soon as its lifetime has passed
+    ({!val-status}), whether or not {!expire} has been applied and stored yet. *)
 
 open! Core
 
@@ -42,8 +42,7 @@ type t = private
 [@@deriving sexp_of, compare, equal]
 
 (** A new pending request, and the notice telling the payer. [expires_at] is [now] plus
-    the policy's request lifetime. Refuses a non-positive amount and a request to
-    oneself. *)
+    the policy's request lifetime. Refuses a non-positive amount and a request to oneself. *)
 val create
   :  ?policy:Policy.t
   -> id:Request_id.t
@@ -105,12 +104,12 @@ val apply
   -> now:Time_ns.t
   -> (Step.t, Refusal.t) Result.t
 
-(** Marks a request that has run out as [Expired] (stamped at its [expires_at]) and
-    tells the requester. [None] when the request is final or not yet due. *)
+(** Marks a request that has run out as [Expired] (stamped at its [expires_at]) and tells
+    the requester. [None] when the request is final or not yet due. *)
 val expire : t -> now:Time_ns.t -> Step.t option
 
-(** When the requester may send the next reminder: [None] once the count limit is
-    reached or the request is no longer pending. *)
+(** When the requester may send the next reminder: [None] once the count limit is reached
+    or the request is no longer pending. *)
 val next_reminder_at : ?policy:Policy.t -> t -> now:Time_ns.t -> Time_ns.t option
 
 module Actions : sig

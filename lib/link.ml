@@ -79,7 +79,8 @@ let create
     match amount with
     | None -> Ok ()
     | Some a when not (Money.Currency.equal (Money.Amount.currency a) currency) ->
-      Error (Refusal.Currency_mismatch { expected = currency; got = Money.Amount.currency a })
+      Error
+        (Refusal.Currency_mismatch { expected = currency; got = Money.Amount.currency a })
     | Some a when not (Money.Amount.is_positive a) -> Error Refusal.Amount_not_positive
     | Some _ -> Ok ()
   in
@@ -147,11 +148,13 @@ let is_last_use t ~uses =
 let chosen_amount t ~given : (Money.Amount.t, Refusal.t) Result.t =
   match t.amount, given with
   | Some fixed, None -> Ok fixed
-  | Some fixed, Some a -> if Money.Amount.equal fixed a then Ok fixed else Error Amount_fixed
+  | Some fixed, Some a ->
+    if Money.Amount.equal fixed a then Ok fixed else Error Amount_fixed
   | None, None -> Error Amount_required
   | None, Some a ->
     if not (Money.Currency.equal (Money.Amount.currency a) t.currency)
-    then Error (Currency_mismatch { expected = t.currency; got = Money.Amount.currency a })
+    then
+      Error (Currency_mismatch { expected = t.currency; got = Money.Amount.currency a })
     else if not (Money.Amount.is_positive a)
     then Error Amount_not_positive
     else Ok a
@@ -160,7 +163,9 @@ let chosen_amount t ~given : (Money.Amount.t, Refusal.t) Result.t =
 let pay t ~(payer : Party.t) ~from ~from_currency ?amount ~now () =
   let open Result.Let_syntax in
   let%bind () =
-    if Customer_id.equal payer.customer t.owner.customer then Error Refusal.Own_link else Ok ()
+    if Customer_id.equal payer.customer t.owner.customer
+    then Error Refusal.Own_link
+    else Ok ()
   in
   let%bind () = if has_paid t payer.customer then Error Refusal.Already_paid else Ok () in
   let%bind () =
@@ -183,8 +188,7 @@ let pay t ~(payer : Party.t) ~from ~from_currency ?amount ~now () =
       ~to_:t.account
       ~amount
       ~note:t.note
-    (* The amount was checked above, so this fails only on paying into the source
-       account. *)
+    (* The amount was checked above, so this fails only on paying into the source account. *)
     |> Result.map_error ~f:(fun _ -> Refusal.Same_account)
   in
   let payment : Payment.t =
@@ -244,7 +248,8 @@ let public_view t ~viewer ~now =
   let view : Public.t =
     match status t ~now with
     | Active ->
-      Available { name = t.owner.name; amount = t.amount; currency = t.currency; note = t.note }
+      Available
+        { name = t.owner.name; amount = t.amount; currency = t.currency; note = t.note }
     | s -> Unavailable s
   in
   let viewer : Public.viewer =

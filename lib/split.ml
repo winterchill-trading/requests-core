@@ -88,7 +88,9 @@ let validate_shares ~policy ~(owner : Party.t) ~total ~own_share (shares : Share
   let%bind () = check_participants ~policy (List.length shares) in
   let%bind () = in_currency own_share in
   let%bind () =
-    if Money.Amount.is_negative own_share then Error Refusal.Amount_not_positive else Ok ()
+    if Money.Amount.is_negative own_share
+    then Error Refusal.Amount_not_positive
+    else Ok ()
   in
   let%bind () =
     if List.exists shares ~f:(fun s -> Customer_id.equal s.payer.customer owner.customer)
@@ -106,7 +108,9 @@ let validate_shares ~policy ~(owner : Party.t) ~total ~own_share (shares : Share
   let%bind () =
     List.fold_result shares ~init:() ~f:(fun () s ->
       let%bind () = in_currency s.amount in
-      if Money.Amount.is_positive s.amount then Ok () else Error Refusal.Amount_not_positive)
+      if Money.Amount.is_positive s.amount
+      then Ok ()
+      else Error Refusal.Amount_not_positive)
   in
   let sum =
     List.fold shares ~init:own_share ~f:(fun acc s -> Money.Amount.add_exn acc s.amount)
@@ -180,10 +184,13 @@ end
 
 let share_requests t ~requests =
   List.map t.shares ~f:(fun (s : Share.t) ->
-    match List.find requests ~f:(fun (r : Request.t) -> Request_id.equal r.id s.request) with
+    match
+      List.find requests ~f:(fun (r : Request.t) -> Request_id.equal r.id s.request)
+    with
     | Some r -> Ok (s, r)
     | None ->
-      Or_error.error_s [%message "split share has no request" ~request:(s.request : Request_id.t)])
+      Or_error.error_s
+        [%message "split share has no request" ~request:(s.request : Request_id.t)])
   |> Or_error.all
 ;;
 
@@ -192,7 +199,9 @@ let summary t ~requests ~now =
   let%map pairs = share_requests t ~requests in
   let with_status = List.map pairs ~f:(fun (s, r) -> s, Request.status r ~now) in
   let sum status =
-    List.fold with_status ~init:(Money.Amount.zero (Money.Amount.currency t.total))
+    List.fold
+      with_status
+      ~init:(Money.Amount.zero (Money.Amount.currency t.total))
       ~f:(fun acc ((s : Share.t), st) ->
         if Request_status.equal st status then Money.Amount.add_exn acc s.amount else acc)
   in
@@ -223,18 +232,17 @@ let remind ?(policy = Policy.default) t ~by ~requests ~now =
       | _ :: _ as steps -> Ok steps
       | [] ->
         (* Nothing could be reminded: answer with the refusal that clears first. *)
-        let refusals = List.filter_map results ~f:(function
-          | Ok _ -> None
-          | Error r -> Some r)
+        let refusals =
+          List.filter_map results ~f:(function
+            | Ok _ -> None
+            | Error r -> Some r)
         in
         let retry_at : Refusal.t -> Time_ns.t option = function
           | Reminder_too_soon { retry_at } -> Some retry_at
           | _ -> None
         in
         (match
-           List.min_elt
-             (List.filter_map refusals ~f:retry_at)
-             ~compare:Time_ns.compare
+           List.min_elt (List.filter_map refusals ~f:retry_at) ~compare:Time_ns.compare
          with
          | Some retry_at -> Error (Reminder_too_soon { retry_at })
          | None -> Error (List.hd_exn refusals))))

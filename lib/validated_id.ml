@@ -39,7 +39,9 @@ module Make
     () =
 struct
   let of_string_or_error s =
-    Or_error.tag_s (check s) ~tag:[%message "" ~_:(M.module_name : string) ~id:(s : string)]
+    Or_error.tag_s
+      (check s)
+      ~tag:[%message "" ~_:(M.module_name : string) ~id:(s : string)]
     |> Or_error.map ~f:(fun () -> s)
   ;;
 
@@ -69,7 +71,9 @@ struct
   let quickcheck_generator =
     let open Quickcheck.Generator.Let_syntax in
     let%bind len = Int.gen_incl 1 12 in
-    String.gen_with_length len (Quickcheck.Generator.of_list (String.to_list "abcxyz09-_."))
+    String.gen_with_length
+      len
+      (Quickcheck.Generator.of_list (String.to_list "abcxyz09-_."))
   ;;
 
   let quickcheck_observer = String.quickcheck_observer

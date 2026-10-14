@@ -8,13 +8,18 @@ module Make (M : Monad.S) (Store : Store.S with type 'a io := 'a M.t) = struct
   let eur minor = Money.Amount.of_minor_units_int Money.Currency.eur minor
 
   let party id =
-    Party.create_exn ~customer:(Customer_id.of_string ("conf-" ^ id)) ~name:(String.capitalize id)
+    Party.create_exn
+      ~customer:(Customer_id.of_string ("conf-" ^ id))
+      ~name:(String.capitalize id)
   ;;
 
   let owner = party "owner"
   let payer = party "payer"
   let other = party "other"
-  let account (p : Party.t) = Ledger.Account_id.of_string ("conf:" ^ Customer_id.to_string p.customer)
+
+  let account (p : Party.t) =
+    Ledger.Account_id.of_string ("conf:" ^ Customer_id.to_string p.customer)
+  ;;
 
   let request ?split ~id ~min ~(payer : Party.t) () =
     match
@@ -56,12 +61,19 @@ module Make (M : Monad.S) (Store : Store.S with type 'a io := 'a M.t) = struct
   let expect name ~equal ~sexp_of got expected =
     if equal got expected
     then Ok ()
-    else Or_error.error_s [%message name ~got:(sexp_of got : Sexp.t) ~expected:(sexp_of expected : Sexp.t)]
+    else
+      Or_error.error_s
+        [%message name ~got:(sexp_of got : Sexp.t) ~expected:(sexp_of expected : Sexp.t)]
   ;;
 
   let ids rs = List.map rs ~f:(fun (r : Request.t) -> Request_id.to_string r.id)
+
   let expect_ids name got expected =
-    expect name ~equal:[%equal: string list] ~sexp_of:[%sexp_of: string list] (ids got)
+    expect
+      name
+      ~equal:[%equal: string list]
+      ~sexp_of:[%sexp_of: string list]
+      (ids got)
       (List.map expected ~f:(( ^ ) "conf-"))
   ;;
 
@@ -84,7 +96,11 @@ module Make (M : Monad.S) (Store : Store.S with type 'a io := 'a M.t) = struct
       match
         Request.apply
           r1
-          (Pay { by = payer.customer; from = account payer; from_currency = Money.Currency.eur })
+          (Pay
+             { by = payer.customer
+             ; from = account payer
+             ; from_currency = Money.Currency.eur
+             })
           ~now:(at 5)
       with
       | Ok step -> step.request
@@ -96,25 +112,42 @@ module Make (M : Monad.S) (Store : Store.S with type 'a io := 'a M.t) = struct
     let%bind outgoing = Store.requests_of store owner.customer ~side:Requester ~limit:2 in
     let%bind incoming = Store.requests_of store payer.customer ~side:Payer ~limit:10 in
     let%bind none = Store.requests_of store other.customer ~side:Requester ~limit:10 in
-    let%bind due = Store.due_requests store ~now:(Time_ns.add (at 1) Policy.default.request_lifetime) ~limit:10 in
+    let%bind due =
+      Store.due_requests
+        store
+        ~now:(Time_ns.add (at 1) Policy.default.request_lifetime)
+        ~limit:10
+    in
     return
       (Or_error.combine_errors_unit
-         [ expect "first insert" ~equal:Poly.equal ~sexp_of:(function
-             | `Inserted -> [%sexp "Inserted"]
-             | `Exists _ -> [%sexp "Exists"]) i1 `Inserted
+         [ expect
+             "first insert"
+             ~equal:Poly.equal
+             ~sexp_of:(function
+               | `Inserted -> [%sexp "Inserted"]
+               | `Exists _ -> [%sexp "Exists"])
+             i1
+             `Inserted
          ; (match again with
             | `Exists r when Request.equal r r1 -> Ok ()
-            | _ -> Or_error.error_string "second insert of a request id must return Exists")
+            | _ ->
+              Or_error.error_string "second insert of a request id must return Exists")
          ; (match u1, u2 with
             | `Updated, `Stale (Some r) when Request.equal r paid -> Ok ()
-            | _ -> Or_error.error_string "compare-and-set: first update wins, second sees the new value")
-         ; expect "find after update" ~equal:[%equal: Request.t option]
-             ~sexp_of:[%sexp_of: Request.t option] found (Some paid)
+            | _ ->
+              Or_error.error_string
+                "compare-and-set: first update wins, second sees the new value")
+         ; expect
+             "find after update"
+             ~equal:[%equal: Request.t option]
+             ~sexp_of:[%sexp_of: Request.t option]
+             found
+             (Some paid)
          ; expect_ids "outgoing, newest first, limited" outgoing [ "r3"; "r2" ]
          ; expect_ids "incoming" incoming [ "r2"; "r1" ]
          ; expect_ids "a payer has no outgoing" none []
-         ; (* r1 is paid, so only the pending r2 (created a minute later than r1) and
-              not r3 (two minutes) are due. *)
+         ; (* r1 is paid, so only the pending r2 (created a minute later than r1) and not
+              r3 (two minutes) are due. *)
            expect_ids "due requests" due [ "r2" ]
          ])
   ;;
@@ -129,8 +162,14 @@ module Make (M : Monad.S) (Store : Store.S with type 'a io := 'a M.t) = struct
     let%bind again = Store.insert_link store l1 in
     let paid =
       match
-        Link.pay l1 ~payer ~from:(account payer) ~from_currency:Money.Currency.eur
-          ~amount:(eur 500) ~now:(at 3) ()
+        Link.pay
+          l1
+          ~payer
+          ~from:(account payer)
+          ~from_currency:Money.Currency.eur
+          ~amount:(eur 500)
+          ~now:(at 3)
+          ()
       with
       | Ok step -> step.link
       | Error refusal -> raise_s [%sexp (refusal : Refusal.t)]
@@ -149,13 +188,27 @@ module Make (M : Monad.S) (Store : Store.S with type 'a io := 'a M.t) = struct
          ; (match u1, u2 with
             | `Updated, `Stale (Some l) when Link.equal l paid -> Ok ()
             | _ -> Or_error.error_string "link compare-and-set")
-         ; expect "find by token" ~equal:[%equal: Link.t option]
-             ~sexp_of:[%sexp_of: Link.t option] by_token (Some paid)
-         ; expect "unknown token" ~equal:[%equal: Link.t option]
-             ~sexp_of:[%sexp_of: Link.t option] missing None
-         ; expect "a refused link is not stored" ~equal:[%equal: Link.t option]
-             ~sexp_of:[%sexp_of: Link.t option] l3 None
-         ; expect "links newest first" ~equal:[%equal: Link_id.t list]
+         ; expect
+             "find by token"
+             ~equal:[%equal: Link.t option]
+             ~sexp_of:[%sexp_of: Link.t option]
+             by_token
+             (Some paid)
+         ; expect
+             "unknown token"
+             ~equal:[%equal: Link.t option]
+             ~sexp_of:[%sexp_of: Link.t option]
+             missing
+             None
+         ; expect
+             "a refused link is not stored"
+             ~equal:[%equal: Link.t option]
+             ~sexp_of:[%sexp_of: Link.t option]
+             l3
+             None
+         ; expect
+             "links newest first"
+             ~equal:[%equal: Link_id.t list]
              ~sexp_of:[%sexp_of: Link_id.t list]
              (List.map mine ~f:(fun (l : Link.t) -> l.id))
              [ l2.id; l1.id ]
@@ -166,13 +219,22 @@ module Make (M : Monad.S) (Store : Store.S with type 'a io := 'a M.t) = struct
     let split_id = Split_id.of_string "conf-s1" in
     let split ~id shares =
       match
-        Split.create ~id ~owner ~account:(account owner)
-          ~title:(Note.of_string "Conformance" |> Or_error.ok_exn) ~total:(eur 3000)
-          ~own_share:(eur 1000) ~source:"conf-tx"
+        Split.create
+          ~id
+          ~owner
+          ~account:(account owner)
+          ~title:(Note.of_string "Conformance" |> Or_error.ok_exn)
+          ~total:(eur 3000)
+          ~own_share:(eur 1000)
+          ~source:"conf-tx"
           ~shares:
             (List.map shares ~f:(fun (request, payer) ->
-               { Split.Share.request = Request_id.of_string request; payer; amount = eur 1000 }))
-          ~now:(at 10) ()
+               { Split.Share.request = Request_id.of_string request
+               ; payer
+               ; amount = eur 1000
+               }))
+          ~now:(at 10)
+          ()
       with
       | Ok c -> c
       | Error refusal -> raise_s [%sexp (refusal : Refusal.t)]
@@ -194,17 +256,30 @@ module Make (M : Monad.S) (Store : Store.S with type 'a io := 'a M.t) = struct
          [ (match bad_insert, bad_found, bad_share with
             | `Request_exists id, None, None
               when String.equal (Request_id.to_string id) "conf-r1" -> Ok ()
-            | _ -> Or_error.error_string "a split insert with a taken request id must write nothing")
+            | _ ->
+              Or_error.error_string
+                "a split insert with a taken request id must write nothing")
          ; (match i1, i2 with
             | `Inserted, `Exists s when Split.equal s created.split -> Ok ()
             | _ -> Or_error.error_string "split insert once")
-         ; expect "share requests" ~equal:[%equal: string list] ~sexp_of:[%sexp_of: string list]
+         ; expect
+             "share requests"
+             ~equal:[%equal: string list]
+             ~sexp_of:[%sexp_of: string list]
              (List.sort (ids shares) ~compare:String.compare)
              [ "conf-s1-a"; "conf-s1-b" ]
-         ; expect "splits by source" ~equal:[%equal: int] ~sexp_of:[%sexp_of: int]
-             (List.length by_source) 1
-         ; expect "splits by another source" ~equal:[%equal: int] ~sexp_of:[%sexp_of: int]
-             (List.length other_source) 0
+         ; expect
+             "splits by source"
+             ~equal:[%equal: int]
+             ~sexp_of:[%sexp_of: int]
+             (List.length by_source)
+             1
+         ; expect
+             "splits by another source"
+             ~equal:[%equal: int]
+             ~sexp_of:[%sexp_of: int]
+             (List.length other_source)
+             0
          ])
   ;;
 
@@ -230,7 +305,9 @@ module Make (M : Monad.S) (Store : Store.S with type 'a io := 'a M.t) = struct
     let%bind recent = Store.notices_for store payer.customer ~since:(at 21) ~limit:10 in
     let%bind one = Store.notices_for store payer.customer ~since:(at 0) ~limit:1 in
     return
-      (expect "notices" ~equal:[%equal: Notice.t list list]
+      (expect
+         "notices"
+         ~equal:[%equal: Notice.t list list]
          ~sexp_of:[%sexp_of: Notice.t list list]
          [ all; recent; one ]
          [ [ n2; n1 ]; [ n2 ]; [ n2 ] ])
@@ -238,7 +315,6 @@ module Make (M : Monad.S) (Store : Store.S with type 'a io := 'a M.t) = struct
 
   let check store =
     requests store
-    >>=? fun () ->
-    links store >>=? fun () -> splits store >>=? fun () -> notices store
+    >>=? fun () -> links store >>=? fun () -> splits store >>=? fun () -> notices store
   ;;
 end

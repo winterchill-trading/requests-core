@@ -14,7 +14,7 @@ let encode bytes =
     if i < n
     then (
       let v = (byte i lsl 16) lor (byte (i + 1) lsl 8) lor byte (i + 2) in
-      let chars = Int.min 4 (((n - i) * 8 + 5) / 6) in
+      let chars = Int.min 4 ((((n - i) * 8) + 5) / 6) in
       for k = 0 to chars - 1 do
         Buffer.add_char buf alphabet.[(v lsr (18 - (6 * k))) land 63]
       done;
@@ -26,13 +26,13 @@ let encode bytes =
 
 let check s =
   if String.length s <> length
-  then Or_error.error_s [%message "link token has the wrong length" ~expected:(length : int)]
+  then
+    Or_error.error_s [%message "link token has the wrong length" ~expected:(length : int)]
   else if not (String.for_all s ~f:(String.mem alphabet))
   then Or_error.error_string "link token has a character outside base64url"
-  else if
-    (* 43 characters carry 258 bits; the last character's two low bits must be zero for
-       the text to be the canonical encoding of 32 bytes. *)
-    String.index_exn alphabet s.[length - 1] land 3 <> 0
+  else if (* 43 characters carry 258 bits; the last character's two low bits must be zero
+             for the text to be the canonical encoding of 32 bytes. *)
+          String.index_exn alphabet s.[length - 1] land 3 <> 0
   then Or_error.error_string "link token is not a canonical encoding"
   else Ok s
 ;;
@@ -60,7 +60,8 @@ let of_random_bytes bytes =
   if String.length bytes <> byte_length
   then
     Or_error.error_s
-      [%message "link token needs exactly 32 random bytes" ~got:(String.length bytes : int)]
+      [%message
+        "link token needs exactly 32 random bytes" ~got:(String.length bytes : int)]
   else Ok (encode bytes)
 ;;
 

@@ -23,13 +23,23 @@ let link ?amount ?note ?lifetime ?(usage = Link.Usage.Single_use) () =
 ;;
 
 let pay ?amount ?(currency = Money.Currency.eur) l (p : Party.t) ~min =
-  Link.pay l ~payer:p ~from:(account p) ~from_currency:currency ?amount ~now:(after_min min) ()
+  Link.pay
+    l
+    ~payer:p
+    ~from:(account p)
+    ~from_currency:currency
+    ?amount
+    ~now:(after_min min)
+    ()
 ;;
 
 let show l ~viewer ~now =
   print_s
     [%sexp
-      (Link.public_view l ~viewer:(Option.map viewer ~f:(fun (p : Party.t) -> p.customer)) ~now
+      (Link.public_view
+         l
+         ~viewer:(Option.map viewer ~f:(fun (p : Party.t) -> p.customer))
+         ~now
        : Link.Public.t * Link.Public.viewer)]
 ;;
 
@@ -105,8 +115,7 @@ let%expect_test "a fixed amount cannot be changed by the payer" =
   let l = link ~amount:(eur "20.00") () |> ok in
   print_refusal (pay ~amount:(eur "19.99") l bob ~min:1);
   print_refusal (pay ~amount:(eur "20.00") l bob ~min:1);
-  [%expect
-    {|
+  [%expect {|
     (amount_fixed Amount_fixed)
     accepted
     |}]
@@ -140,7 +149,9 @@ let%expect_test "creation limits" =
   print_refusal (link ~usage:(Multi_use { max_uses = Some 101 }) ());
   print_refusal (link ~usage:(Multi_use { max_uses = Some 100 }) ());
   print_refusal (link ~amount:(gbp "1.00") ());
-  print_s [%sexp (List.map [ 1; 7; 30; 14 ] ~f:Link.Lifetime.of_days : Link.Lifetime.t option list)];
+  print_s
+    [%sexp
+      (List.map [ 1; 7; 30; 14 ] ~f:Link.Lifetime.of_days : Link.Lifetime.t option list)];
   [%expect
     {|
     (invalid_max_uses (Invalid_max_uses (max 100)))
@@ -156,10 +167,16 @@ let%test_unit "the public view carries only name, amount, currency and note" =
   let l = link ~amount:(eur "3.00") ~note:"x" () |> ok in
   let l = (pay l bob ~min:1 |> ok).link in
   let text =
-    List.map [ t0; after_min 2 ] ~f:(fun now ->
-      Sexp.to_string [%sexp (Link.public_view l ~viewer:None ~now : Link.Public.t * Link.Public.viewer)])
+    List.map
+      [ t0; after_min 2 ]
+      ~f:(fun now ->
+        Sexp.to_string
+          [%sexp
+            (Link.public_view l ~viewer:None ~now : Link.Public.t * Link.Public.viewer)])
     |> String.concat
   in
   List.iter [ "customer:"; "alice"; "bob"; "l1" ] ~f:(fun secret ->
-    [%test_pred: string] (fun text -> not (String.is_substring text ~substring:secret)) text)
+    [%test_pred: string]
+      (fun text -> not (String.is_substring text ~substring:secret))
+      text)
 ;;

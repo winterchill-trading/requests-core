@@ -46,46 +46,49 @@ let%test_unit "request invariants hold for any command sequence" =
         |> ok
       in
       let _ =
-        List.fold script ~init:(r0, 0, 0, None) ~f:(fun (r, minute, settlements, last_reminder) (gap, cmd) ->
-          let minute = minute + gap in
-          let now = after_min minute in
-          let was_final = Request_status.is_final (Request.status r ~now) in
-          match Request.apply ~policy r cmd ~now with
-          | Error _ -> r, minute, settlements, last_reminder
-          | Ok step ->
-            let r' = step.request in
-            (* Nothing leaves a final state. *)
-            assert (not was_final);
-            (* Exactly one notice, and never to the customer who acted. *)
-            (match step.notices with
-             | [ n ] ->
-               (match cmd with
-                | Pay { by; _ } | Decline { by } | Cancel { by } | Remind { by } ->
-                  assert (not (Customer_id.equal n.recipient by)))
-             | _ -> assert false);
-            (* Paid exactly when a payment is recorded, and a settlement comes with it. *)
-            [%test_result: bool]
-              ~expect:(Request_status.equal r'.status Paid)
-              (Option.is_some r'.payment);
-            [%test_result: bool]
-              ~expect:(Option.is_some step.settlement)
-              (Request_status.equal r'.status Paid);
-            [%test_result: bool]
-              ~expect:(Request_status.is_final r'.status)
-              (Option.is_some r'.decided_at);
-            let settlements = settlements + Option.length step.settlement in
-            assert (settlements <= 1);
-            let last_reminder =
-              if r'.reminders > r.reminders
-              then (
-                assert (r'.reminders = r.reminders + 1);
-                assert (r'.reminders <= 3);
-                let since = Option.value last_reminder ~default:r.created_at in
-                assert (Time_ns.Span.( >= ) (Time_ns.diff now since) policy.reminder_gap);
-                Some now)
-              else last_reminder
-            in
-            r', minute, settlements, last_reminder)
+        List.fold
+          script
+          ~init:(r0, 0, 0, None)
+          ~f:(fun (r, minute, settlements, last_reminder) (gap, cmd) ->
+            let minute = minute + gap in
+            let now = after_min minute in
+            let was_final = Request_status.is_final (Request.status r ~now) in
+            match Request.apply ~policy r cmd ~now with
+            | Error _ -> r, minute, settlements, last_reminder
+            | Ok step ->
+              let r' = step.request in
+              (* Nothing leaves a final state. *)
+              assert (not was_final);
+              (* Exactly one notice, and never to the customer who acted. *)
+              (match step.notices with
+               | [ n ] ->
+                 (match cmd with
+                  | Pay { by; _ } | Decline { by } | Cancel { by } | Remind { by } ->
+                    assert (not (Customer_id.equal n.recipient by)))
+               | _ -> assert false);
+              (* Paid exactly when a payment is recorded, and a settlement comes with it. *)
+              [%test_result: bool]
+                ~expect:(Request_status.equal r'.status Paid)
+                (Option.is_some r'.payment);
+              [%test_result: bool]
+                ~expect:(Option.is_some step.settlement)
+                (Request_status.equal r'.status Paid);
+              [%test_result: bool]
+                ~expect:(Request_status.is_final r'.status)
+                (Option.is_some r'.decided_at);
+              let settlements = settlements + Option.length step.settlement in
+              assert (settlements <= 1);
+              let last_reminder =
+                if r'.reminders > r.reminders
+                then (
+                  assert (r'.reminders = r.reminders + 1);
+                  assert (r'.reminders <= 3);
+                  let since = Option.value last_reminder ~default:r.created_at in
+                  assert (Time_ns.Span.( >= ) (Time_ns.diff now since) policy.reminder_gap);
+                  Some now)
+                else last_reminder
+              in
+              r', minute, settlements, last_reminder)
       in
       ())
 ;;
@@ -98,11 +101,14 @@ type link_action =
 let gen_link_action =
   let open Quickcheck.Generator.Let_syntax in
   let customers =
-    List.init 5 ~f:(fun i -> Party.create_exn ~customer:(customer (sprintf "c%d" i)) ~name:"C")
+    List.init 5 ~f:(fun i ->
+      Party.create_exn ~customer:(customer (sprintf "c%d" i)) ~name:"C")
   in
   let%bind p = Quickcheck.Generator.of_list (alice :: customers) in
   let%bind kind = Int.gen_incl 0 9 in
-  let%map amount = Quickcheck.Generator.of_list [ None; Some "0.00"; Some "2.50"; Some "5.00" ] in
+  let%map amount =
+    Quickcheck.Generator.of_list [ None; Some "0.00"; Some "2.50"; Some "5.00" ]
+  in
   if kind = 0 then Revoke p else Pay (p, amount)
 ;;
 
@@ -111,7 +117,12 @@ let%test_unit "link invariants hold for any sequence of payments" =
     Quickcheck.Generator.(
       tuple3
         (of_list [ None; Some "5.00" ])
-        (of_list Link.Usage.[ Single_use; Multi_use { max_uses = None }; Multi_use { max_uses = Some 3 } ])
+        (of_list
+           Link.Usage.
+             [ Single_use
+             ; Multi_use { max_uses = None }
+             ; Multi_use { max_uses = Some 3 }
+             ])
         (gen_script gen_link_action))
     ~sexp_of:[%sexp_of: string option * Link.Usage.t * (int * link_action) list]
     ~f:(fun (amount, usage, script) ->
@@ -149,8 +160,14 @@ let%test_unit "link invariants hold for any sequence of payments" =
              | Error _ -> l, minute)
           | Pay (p, given) ->
             (match
-               Link.pay l ~payer:p ~from:(account p) ~from_currency:Money.Currency.eur
-                 ?amount:(Option.map given ~f:eur) ~now ()
+               Link.pay
+                 l
+                 ~payer:p
+                 ~from:(account p)
+                 ~from_currency:Money.Currency.eur
+                 ?amount:(Option.map given ~f:eur)
+                 ~now
+                 ()
              with
              | Error _ -> l, minute
              | Ok step ->
@@ -172,7 +189,9 @@ let%test_unit "link invariants hold for any sequence of payments" =
       assert (not (List.contains_dup payers ~compare:Customer_id.compare));
       [%test_result: Money.Amount.t]
         ~expect:
-          (Money.Amount.sum Money.Currency.eur (List.map final.payments ~f:(fun p -> p.amount))
+          (Money.Amount.sum
+             Money.Currency.eur
+             (List.map final.payments ~f:(fun p -> p.amount))
            |> Or_error.ok_exn)
         (Link.collected final);
       (* Nothing is paid at or after expiry. *)

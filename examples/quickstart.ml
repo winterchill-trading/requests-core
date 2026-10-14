@@ -9,19 +9,22 @@ module Store = Store_memory.Make (Monad.Ident)
 let t0 = Time_ns.of_string_with_utc_offset "2026-10-13 18:00:00Z"
 let at min = Time_ns.add t0 (Time_ns.Span.of_int_sec (60 * min))
 let eur s = Money.Amount.of_decimal_string Money.Currency.eur s |> Or_error.ok_exn
-
 let party id name = Party.create_exn ~customer:(Customer_id.of_string id) ~name
 let ada = party "ada" "Ada"
 let ben = party "ben" "Ben"
 let cleo = party "cleo" "Cleo"
-let account (p : Party.t) = Ledger.Account_id.of_string ("customer:" ^ Customer_id.to_string p.customer)
+
+let account (p : Party.t) =
+  Ledger.Account_id.of_string ("customer:" ^ Customer_id.to_string p.customer)
+;;
+
 let ok = function
   | Ok x -> x
   | Error r -> raise_s [%sexp (r : Refusal.t)]
 ;;
 
-(* A ledger with the three customer accounts, the intraledger settlement account, and
-   Ben and Cleo funded from outside. *)
+(* A ledger with the three customer accounts, the intraledger settlement account, and Ben
+   and Cleo funded from outside. *)
 let balances =
   let apply b event =
     Ledger.Balances.apply b { seq = Ledger.Balances.next_seq b; event } |> Or_error.ok_exn
@@ -29,8 +32,9 @@ let balances =
   let clearing = Ledger.Account_id.of_string "external:clearing" in
   let b =
     List.fold
-      (Ledger.Account.create ~allow_negative:true clearing Asset
-       :: List.map [ ada; ben; cleo ] ~f:(fun p -> Ledger.Account.create (account p) Liability)
+      ((Ledger.Account.create ~allow_negative:true clearing Asset
+        :: List.map [ ada; ben; cleo ] ~f:(fun p ->
+          Ledger.Account.create (account p) Liability))
        @ Settlement.accounts [ Money.Currency.eur ])
       ~init:Ledger.Balances.empty
       ~f:(fun b a -> apply b (Account_opened a))
@@ -134,7 +138,13 @@ let () =
   let link =
     List.fold [ ben; cleo ] ~init:link ~f:(fun link payer ->
       let step =
-        Link.pay link ~payer ~from:(account payer) ~from_currency:Money.Currency.eur ~now:(at 7) ()
+        Link.pay
+          link
+          ~payer
+          ~from:(account payer)
+          ~from_currency:Money.Currency.eur
+          ~now:(at 7)
+          ()
         |> ok
       in
       settle step.settlement ~now:(at 7);
@@ -154,8 +164,14 @@ let () =
       ~total:(eur "25.00")
       ~own_share:shares.own_share
       ~shares:
-        [ { request = Request_id.of_string "split-1-ben"; payer = ben; amount = shares.other_share }
-        ; { request = Request_id.of_string "split-1-cleo"; payer = cleo; amount = shares.other_share }
+        [ { request = Request_id.of_string "split-1-ben"
+          ; payer = ben
+          ; amount = shares.other_share
+          }
+        ; { request = Request_id.of_string "split-1-cleo"
+          ; payer = cleo
+          ; amount = shares.other_share
+          }
         ]
       ~now:(at 10)
       ()
@@ -174,9 +190,14 @@ let () =
     |> ok
   in
   settle (Option.value_exn step.settlement) ~now:(at 11);
-  ignore (Store.update_request store ~expected:ben_share step.request : [ `Updated | `Stale of Request.t option ]);
+  ignore
+    (Store.update_request store ~expected:ben_share step.request
+     : [ `Updated | `Stale of Request.t option ]);
   let summary =
-    Split.summary created.split ~requests:(Store.requests_of_split store created.split.id) ~now:(at 12)
+    Split.summary
+      created.split
+      ~requests:(Store.requests_of_split store created.split.id)
+      ~now:(at 12)
     |> Or_error.ok_exn
   in
   print_s [%sexp (summary : Split.Summary.t)];
@@ -185,7 +206,8 @@ let () =
     printf
       "  %-5s %s\n"
       p.name
-      (Money.Amount.to_string (Ledger.Balances.posted !balances (account p) Money.Currency.eur)));
+      (Money.Amount.to_string
+         (Ledger.Balances.posted !balances (account p) Money.Currency.eur)));
   printf
     "  notices for Ada: %d\n"
     (List.length (Store.notices_for store ada.customer ~since:t0 ~limit:100))

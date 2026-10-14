@@ -2,8 +2,8 @@
     written as 43 characters of unpadded base64url.
 
     A token is the only thing a payer needs to see a link, so it must not be guessable:
-    256 bits of randomness put guessing out of reach however many links exist. It is
-    never derived from the link id, the owner or a counter. *)
+    256 bits of randomness put guessing out of reach however many links exist. It is never
+    derived from the link id, the owner or a counter. *)
 
 open! Core
 
@@ -23,8 +23,8 @@ val generate : ?rng:Cryptokit.Random.rng -> unit -> t
     generator. *)
 val of_random_bytes : string -> t Or_error.t
 
-(** Parses the text form; fails unless it is {!length} base64url characters that decode
-    to {!byte_length} bytes. *)
+(** Parses the text form; fails unless it is {!length} base64url characters that decode to
+    {!byte_length} bytes. *)
 val of_string : string -> t Or_error.t
 
 val to_string : t -> string

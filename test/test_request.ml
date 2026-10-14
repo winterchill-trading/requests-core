@@ -32,9 +32,11 @@ let%expect_test "a new request notifies the payer and expires after 14 days" =
     ((note ("pizza night")) (expires_at "2026-10-27 09:00:00Z"))
     |}];
   List.iter [ 0; 13; 14 ] ~f:(fun d ->
-    printf "day %2d: %s\n" d (Request_status.to_string (Request.status r ~now:(after_day d))));
-  [%expect
-    {|
+    printf
+      "day %2d: %s\n"
+      d
+      (Request_status.to_string (Request.status r ~now:(after_day d))));
+  [%expect {|
     day  0: pending
     day 13: pending
     day 14: expired
@@ -77,7 +79,8 @@ let%expect_test "paying returns the settlement and tells the requester" =
     |}];
   (* A paid request is final. *)
   print_refusal (Request.apply step.request (pay_by bob) ~now:(after_min 6));
-  print_refusal (Request.apply step.request (Cancel { by = alice.customer }) ~now:(after_min 6));
+  print_refusal
+    (Request.apply step.request (Cancel { by = alice.customer }) ~now:(after_min 6));
   [%expect
     {|
     (not_pending (Not_pending Paid))
@@ -94,8 +97,7 @@ let%expect_test "roles: who may do what" =
   try_ (Decline { by = alice.customer });
   try_ (Cancel { by = bob.customer });
   try_ (Remind { by = bob.customer });
-  try_
-    (Pay { by = bob.customer; from = account bob; from_currency = Money.Currency.gbp });
+  try_ (Pay { by = bob.customer; from = account bob; from_currency = Money.Currency.gbp });
   [%expect
     {|
     (only_payer_pays Only_payer_pays)
@@ -124,9 +126,13 @@ let%expect_test "roles: who may do what" =
 
 let%expect_test "decline and cancel notify the other side" =
   let r, _ = request () |> ok in
-  let declined = Request.apply r (Decline { by = bob.customer }) ~now:(after_min 1) |> ok in
+  let declined =
+    Request.apply r (Decline { by = bob.customer }) ~now:(after_min 1) |> ok
+  in
   print_notices declined.notices;
-  let cancelled = Request.apply r (Cancel { by = alice.customer }) ~now:(after_min 1) |> ok in
+  let cancelled =
+    Request.apply r (Cancel { by = alice.customer }) ~now:(after_min 1) |> ok
+  in
   print_notices cancelled.notices;
   print_s
     [%message
@@ -149,7 +155,8 @@ let%expect_test "reminders: ten minutes apart, optional count limit" =
     Request.apply ?policy r (Remind { by = alice.customer }) ~now:(after_min min)
   in
   print_refusal (remind r ~min:5);
-  [%expect {| (reminder_too_soon (Reminder_too_soon (retry_at "2026-10-13 09:10:00Z"))) |}];
+  [%expect
+    {| (reminder_too_soon (Reminder_too_soon (retry_at "2026-10-13 09:10:00Z"))) |}];
   let r1 = (remind r ~min:10 |> ok).request in
   print_refusal (remind r1 ~min:19);
   let step = remind r1 ~min:20 |> ok in
@@ -167,8 +174,7 @@ let%expect_test "reminders: ten minutes apart, optional count limit" =
     [%sexp
       (Request.next_reminder_at ~policy step.request ~now:(after_min 60)
        : Time_ns.Alternate_sexp.t option)];
-  [%expect
-    {|
+  [%expect {|
     (reminder_limit_reached (Reminder_limit_reached (max 2)))
     ()
     |}]
@@ -185,7 +191,8 @@ let%expect_test "expiry: read at once, marked by expire" =
       ""
         ~status:(step.request.status : Request_status.t)
         ~decided_at:(step.request.decided_at : Payments_core.Utc_time.t option)];
-  print_s [%sexp (Request.expire step.request ~now:(after_day 21) |> Option.is_some : bool)];
+  print_s
+    [%sexp (Request.expire step.request ~now:(after_day 21) |> Option.is_some : bool)];
   [%expect
     {|
     false

@@ -179,18 +179,15 @@ let apply ?(policy = Policy.default) t (command : Command.t) ~now =
         ~to_:t.account
         ~amount:t.amount
         ~note:t.note
-      (* The amount is positive by construction, so the only failure left is paying
-         from the account the money goes to. *)
+      (* The amount is positive by construction, so the only failure left is paying from
+         the account the money goes to. *)
       |> Result.map_error ~f:(fun _ -> Refusal.Same_account)
     in
     let request =
       { (decide t ~status:Paid ~now) with
         payment =
           Some
-            { from
-            ; key = instruction.key
-            ; transfer = Settlement.outgoing_id instruction
-            }
+            { from; key = instruction.key; transfer = Settlement.outgoing_id instruction }
       }
     in
     { Step.request
@@ -300,6 +297,7 @@ let actions ?(policy = Policy.default) t ~viewer ~now : Actions.t =
   ; can_cancel = requester
   ; can_remind =
       requester
-      && Option.exists (next_reminder_at ~policy t ~now) ~f:(fun at -> Time_ns.( <= ) at now)
+      && Option.exists (next_reminder_at ~policy t ~now) ~f:(fun at ->
+        Time_ns.( <= ) at now)
   }
 ;;
