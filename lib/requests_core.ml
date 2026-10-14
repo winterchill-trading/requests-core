@@ -50,3 +50,6 @@ module Link = Link
 
 (** Bill splits over money requests. *)
 module Split = Split
+
+(** Persistence as a module type. *)
+module Store = Store
