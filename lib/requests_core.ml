@@ -53,3 +53,6 @@ module Split = Split
 
 (** Persistence as a module type. *)
 module Store = Store
+
+(** An in-memory store. *)
+module Store_memory = Store_memory
