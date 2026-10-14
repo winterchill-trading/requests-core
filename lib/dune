@@ -1,0 +1,6 @@
+(library
+ (name requests_core)
+ (public_name requests-core)
+ (libraries core zarith cryptokit money ledger payments-core)
+ (preprocess
+  (pps ppx_jane)))
