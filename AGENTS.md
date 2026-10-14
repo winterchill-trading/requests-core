@@ -101,6 +101,9 @@ in a loop.
 - `Link.pay` checks in a fixed order (owner, status, already paid, currency, amount) and
   callers show the first refusal; the order is part of the contract and is pinned in
   `test/test_link.ml`.
+- `Link.check` repeats the first three checks of `Link.pay`; change both together.
+  `test/test_properties.ml` fails when they disagree. `Status_refusal.Cap_reached` maps to
+  `Link_not_active Completed`, since a capped link is stored `Completed`.
 
 ## Where to read more
 
