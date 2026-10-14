@@ -98,6 +98,9 @@ in a loop.
   through `Random.device_rng`.
 - `Booking.apply` refuses idempotency keys it has already booked: a second booking of
   the same instruction is an error at the balances, a `Duplicate` at the journal.
+- `Link.pay` checks in a fixed order (owner, status, already paid, currency, amount) and
+  callers show the first refusal; the order is part of the contract and is pinned in
+  `test/test_link.ml`.
 
 ## Where to read more
 
