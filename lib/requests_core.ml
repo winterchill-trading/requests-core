@@ -23,3 +23,9 @@ module Party = Party
 
 (** Lifetimes and limits. *)
 module Policy = Policy
+
+(** The states of a money request. *)
+module Request_status = Request_status
+
+(** The states of a payment link. *)
+module Link_status = Link_status
