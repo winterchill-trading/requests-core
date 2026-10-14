@@ -1,0 +1,16 @@
+; Examples are built with the rest of the project (and so in CI) but not installed.
+
+(executable
+ (name quickstart)
+ (libraries core money ledger payments-core requests-core)
+ (preprocess
+  (pps ppx_jane)))
+
+(rule
+ (alias runtest)
+ (action
+  (progn
+   (with-stdout-to
+    quickstart.output
+    (run %{exe:quickstart.exe}))
+   (diff quickstart.expected quickstart.output))))

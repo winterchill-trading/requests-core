@@ -1,0 +1,27 @@
+1. Ada asks Ben for 12.50 EUR
+  notice request:req-1:received
+2. Ada reminds too early, then Ben pays
+  refused: reminder_too_soon
+  booked request:req-1: 12.50 EUR -> Ada
+  notice request:req-1:paid
+3. Ada shares a link for concert tickets
+  token: 43 characters
+(Available (name Ada) (amount ("30.00 EUR")) (currency EUR) (note (concert)))
+  booked link:link-1:ben: 30.00 EUR -> Ada
+  notice link:link-1:paid:ben
+  booked link:link-1:cleo: 30.00 EUR -> Ada
+  notice link:link-1:paid:cleo
+  notice link:link-1:completed
+  link is completed
+4. Ada splits a 25.00 EUR dinner three ways
+((own_share "8.34 EUR") (other_share "8.33 EUR") (remainder "0.01 EUR"))
+  notice request:split-1-ben:received
+  notice request:split-1-cleo:received
+  booked request:split-1-ben: 8.33 EUR -> Ada
+((status Open) (participants 2) (paid 1) (collected "8.33 EUR")
+ (outstanding "8.33 EUR"))
+5. Balances
+  Ada   80.83 EUR
+  Ben   49.17 EUR
+  Cleo  70.00 EUR
+  notices for Ada: 4
