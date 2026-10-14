@@ -11,5 +11,7 @@ round trips) and `test_store_conformance.ml`.
   `alice`, `bob`, `carol`, EUR accounts and `ledger` (balances with funded accounts).
 - A digest change in `test_stable.ml` means stored data stops decoding: add a new
   stable version instead of promoting it.
+- After a test that raised, `dune promote` writes an `[@@expect.uncaught_exn]` block
+  with a backtrace; delete it once the test is fixed.
 - Quickcheck runs inside `let%test_unit` with `Quickcheck.test`; keep generators
   deterministic (no wall clock).

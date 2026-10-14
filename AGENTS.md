@@ -98,8 +98,6 @@ in a loop.
   through `Random.device_rng`.
 - `Booking.apply` refuses idempotency keys it has already booked: a second booking of
   the same instruction is an error at the balances, a `Duplicate` at the journal.
-- After a test that raised, `dune promote` writes an `[@@expect.uncaught_exn]` block
-  with a backtrace; delete it once the test is fixed.
 
 ## Where to read more
 
