@@ -29,3 +29,6 @@ module Request_status = Request_status
 
 (** The states of a payment link. *)
 module Link_status = Link_status
+
+(** Why an operation was refused. *)
+module Refusal = Refusal
