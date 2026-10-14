@@ -44,3 +44,6 @@ module Request = Request
 
 (** Random, unguessable public handles for payment links. *)
 module Link_token = Link_token
+
+(** Payment links and their public view. *)
+module Link = Link
