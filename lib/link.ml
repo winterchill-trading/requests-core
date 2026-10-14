@@ -167,12 +167,14 @@ let pay t ~(payer : Party.t) ~from ~from_currency ?amount ~now () =
     then Error Refusal.Own_link
     else Ok ()
   in
-  let%bind () = if has_paid t payer.customer then Error Refusal.Already_paid else Ok () in
+  (* Status before "already paid": a revoked, expired or completed link is the answer
+     whoever asks, so it is reported first. *)
   let%bind () =
     match status t ~now with
     | Active -> Ok ()
     | s -> Error (Refusal.Link_not_active s)
   in
+  let%bind () = if has_paid t payer.customer then Error Refusal.Already_paid else Ok () in
   let%bind () =
     if Money.Currency.equal from_currency t.currency
     then Ok ()

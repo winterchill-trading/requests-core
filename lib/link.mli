@@ -104,8 +104,9 @@ module Step : sig
 end
 
 (** A payment by [payer] from [from]. Checks, in order: the payer is not the owner
-    ([Own_link]); the payer has not paid before ([Already_paid]); the link is active at
-    [now] ([Link_not_active]); the account is in the link's currency
+    ([Own_link]); the link is active at [now] ([Link_not_active], so a revoked, expired or
+    completed link is reported as such even to a payer who paid it); the payer has not
+    paid before ([Already_paid]); the account is in the link's currency
     ([Currency_mismatch]); then the amount: a fixed link takes no amount or the same one
     ([Amount_fixed]), an open link needs a positive one ([Amount_required],
     [Amount_not_positive]). The payment is recorded at once and the link completes when it
