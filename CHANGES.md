@@ -29,3 +29,8 @@ All notable changes to this project are documented here. The format follows
 - `Notice`, `Refusal`: notices and refusals as values with stable keys and codes.
 - `Store`, `Store_memory`, `Store_conformance`: persistence as a module type, an
   in-memory store and its conformance scenarios.
+- `Link.status_refusal` and `Link.Status_refusal`: why a link cannot be paid at a given
+  time (revoked, expired, completed, cap reached) without a payer, account or amount,
+  with stable codes and the `Refusal.t` that `pay` gives for each.
+- `Link.check ?payer`: the checks of `pay` that need no account or amount (own link,
+  status, already paid), in `pay`'s order; a property checks the two agree.
