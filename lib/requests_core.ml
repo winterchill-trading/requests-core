@@ -20,3 +20,6 @@ module Note = Note
 
 (** A customer with a display name. *)
 module Party = Party
+
+(** Lifetimes and limits. *)
+module Policy = Policy
