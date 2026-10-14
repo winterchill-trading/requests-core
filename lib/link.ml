@@ -160,6 +160,58 @@ let chosen_amount t ~given : (Money.Amount.t, Refusal.t) Result.t =
     else Ok a
 ;;
 
+module Status_refusal = struct
+  type t =
+    | Revoked
+    | Expired
+    | Completed
+    | Cap_reached of { max_uses : int }
+  [@@deriving sexp_of, compare, equal]
+
+  let code = function
+    | Revoked -> "link_revoked"
+    | Expired -> "link_expired"
+    | Completed -> "link_completed"
+    | Cap_reached _ -> "link_cap_reached"
+  ;;
+
+  let to_refusal t : Refusal.t =
+    Link_not_active
+      (match t with
+       | Revoked -> Revoked
+       | Expired -> Expired
+       | Completed | Cap_reached _ -> Completed)
+  ;;
+end
+
+let status_refusal t ~now : Status_refusal.t option =
+  match status t ~now with
+  | Active -> None
+  | Revoked -> Some Revoked
+  | Expired -> Some Expired
+  | Completed ->
+    (match t.usage with
+     | Multi_use { max_uses = Some max_uses } -> Some (Cap_reached { max_uses })
+     | Single_use | Multi_use { max_uses = None } -> Some Completed)
+;;
+
+let check ?payer t ~now =
+  let open Result.Let_syntax in
+  let%bind () =
+    match payer with
+    | Some c when Customer_id.equal c t.owner.customer -> Error Refusal.Own_link
+    | _ -> Ok ()
+  in
+  let%bind () =
+    match status_refusal t ~now with
+    | None -> Ok ()
+    | Some r -> Error (Status_refusal.to_refusal r)
+  in
+  match payer with
+  | Some c when has_paid t c -> Error Refusal.Already_paid
+  | _ -> Ok ()
+;;
+
 let pay t ~(payer : Party.t) ~from ~from_currency ?amount ~now () =
   let open Result.Let_syntax in
   let%bind () =

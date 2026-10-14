@@ -103,6 +103,35 @@ module Step : sig
   [@@deriving sexp_of]
 end
 
+(** Why a link cannot be paid by anyone, whoever asks. *)
+module Status_refusal : sig
+  type t =
+    | Revoked (** the owner revoked it *)
+    | Expired (** it was active and its lifetime has passed *)
+    | Completed (** a single-use link was paid *)
+    | Cap_reached of { max_uses : int }
+    (** a capped multi-use link took its last payment *)
+  [@@deriving sexp_of, compare, equal]
+
+  (** ["link_revoked"], ["link_expired"], ["link_completed"], ["link_cap_reached"]. *)
+  val code : t -> string
+
+  (** The refusal {!pay} gives for it: [Link_not_active] with the link's status
+      ([Completed] for both a paid single-use link and a reached cap). *)
+  val to_refusal : t -> Refusal.t
+end
+
+(** Why the link cannot be paid at [now], or [None] while it is active. Needs no payer,
+    account or amount, so a service can answer before asking for them (on opening a shared
+    link, say). *)
+val status_refusal : t -> now:Time_ns.t -> Status_refusal.t option
+
+(** The checks of {!pay} that need no account or amount, in its order: with [payer], not
+    the owner ([Own_link]); the link is active ({!status_refusal}, as [Link_not_active]);
+    with [payer], not paid before ([Already_paid]). [Ok ()] means {!pay} can still refuse
+    only for the account or the amount. *)
+val check : ?payer:Customer_id.t -> t -> now:Time_ns.t -> (unit, Refusal.t) Result.t
+
 (** A payment by [payer] from [from]. Checks, in order: the payer is not the owner
     ([Own_link]); the link is active at [now] ([Link_not_active], so a revoked, expired or
     completed link is reported as such even to a payer who paid it); the payer has not
