@@ -18,3 +18,10 @@ val account : Party.t -> Ledger.Account_id.t
 val ok : ('a, Refusal.t) Result.t -> 'a
 val print_refusal : ('a, Refusal.t) Result.t -> unit
 val print_notices : Notice.t list -> unit
+
+(** Balances with an EUR account for each party, the intraledger settlement accounts, and
+    each party funded with the given amount from an external clearing account. *)
+val ledger : (Party.t * string) list -> Ledger.Balances.t
+
+val print_entries : Ledger.Entry.t list -> unit
+val print_balances : Ledger.Balances.t -> Ledger.Account_id.t list -> unit
