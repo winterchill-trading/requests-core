@@ -159,6 +159,26 @@ let%test_unit "link invariants hold for any sequence of payments" =
                l', minute
              | Error _ -> l, minute)
           | Pay (p, given) ->
+            let checked = Link.check l ~payer:p.customer ~now in
+            let paid =
+              Link.pay
+                l
+                ~payer:p
+                ~from:(account p)
+                ~from_currency:Money.Currency.eur
+                ?amount:(Option.map given ~f:eur)
+                ~now
+                ()
+            in
+            (* [check] gives the first refusal of [pay] when it has one, and otherwise
+               leaves only account and amount refusals. *)
+            (match checked, paid with
+             | Error r, Error r' -> [%test_result: Refusal.t] r' ~expect:r
+             | Error r, Ok _ ->
+               raise_s [%message "check refused, pay accepted" (r : Refusal.t)]
+             | Ok (), Error (Own_link | Link_not_active _ | Already_paid) ->
+               raise_s [%message "check accepted a status refusal"]
+             | Ok (), (Ok _ | Error _) -> ());
             (match
                Link.pay
                  l
