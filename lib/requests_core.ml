@@ -32,3 +32,6 @@ module Link_status = Link_status
 
 (** Why an operation was refused. *)
 module Refusal = Refusal
+
+(** Notices for customers, as values. *)
+module Notice = Notice
