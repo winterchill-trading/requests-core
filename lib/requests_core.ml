@@ -41,3 +41,6 @@ module Settlement = Settlement
 
 (** The money request state machine. *)
 module Request = Request
+
+(** Random, unguessable public handles for payment links. *)
+module Link_token = Link_token
