@@ -17,3 +17,6 @@ module Split_id = Split_id
 
 (** Short normalised text: notes and titles. *)
 module Note = Note
+
+(** A customer with a display name. *)
+module Party = Party
