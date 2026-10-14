@@ -24,7 +24,8 @@ end
 
 (** Divides [total] between the owner and [others] participants. Refuses a non-positive
     total and fewer than one or more than [policy.max_split_participants]
-    participants. *)
+    participants. When the total has fewer minor units than there are people,
+    [other_share] is zero and {!create} refuses such shares. *)
 val equal_shares
   :  ?policy:Policy.t
   -> total:Money.Amount.t
