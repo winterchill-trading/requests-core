@@ -17,6 +17,8 @@ institution, as pure state machines over [`money`](../money), [`ledger`](../ledg
   the amount (or that the payer chooses it), the currency and the note, and once the link
   cannot be paid, only why. Links are single-use or multi-use with an optional cap, live
   1, 7 or 30 days, can be revoked, refuse their owner and accept one payment per payer.
+  A link that cannot be paid says why (revoked, expired, completed) before anything
+  about the payer, such as having paid already.
 - **Bill splits.** A split records who owes what for a shared expense and creates one
   request per participant. Shares must add up to the total; an equal split gives each
   participant the total divided by the number of people, rounded down to the minor unit,
