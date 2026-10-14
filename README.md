@@ -97,7 +97,7 @@ to end against ledger balances and the in-memory store; CI checks its output.
 | `Party` | A customer id with a display name |
 | `Policy` | Lifetimes and limits: request lifetime, reminder gap and count, link cap bound, split size |
 | `Request_status`, `Request` | The request state machine: `create`, `apply` (pay, decline, cancel, remind), `expire`, `status`, `actions` |
-| `Link_token`, `Link_status`, `Link` | Payment links: `create`, `pay`, `revoke`, `status`, `public_view` |
+| `Link_token`, `Link_status`, `Link` | Payment links: `create`, `pay`, `revoke`, `status`, `status_refusal`, `check`, `public_view` |
 | `Split` | `equal_shares`, `create` (with its requests), `summary`, `remind` |
 | `Settlement` | The instruction a payment produces and its booking as intraledger transfers |
 | `Notice` | Notices for customers, with stable keys |
@@ -118,6 +118,13 @@ link:    active --last allowed payment--> completed
 
 split:   open (a share is pending) | settled (all paid) | closed (none pending, not all paid)
 ```
+
+A service can tell a visitor why a link cannot be paid before asking for an account or an
+amount. `Link.status_refusal l ~now` answers `Revoked`, `Expired`, `Completed` (a paid
+single-use link) or `Cap_reached { max_uses }`, each with a stable code
+(`link_cap_reached`, ...), and `None` while the link is active. `Link.check ~payer l ~now`
+adds the payer checks of `pay` (own link, already paid) in the same order, so `Ok ()`
+leaves only account and amount refusals.
 
 ## Storage
 
