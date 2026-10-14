@@ -6,6 +6,11 @@ All notable changes to this project are documented here. The format follows
 
 ## Unreleased
 
+### Changed
+
+- `Link.pay` checks the link's status before "already paid": a revoked, expired or
+  completed link answers `Link_not_active` to every payer, including one who paid it.
+
 ### Added
 
 - `Customer_id`, `Request_id`, `Link_id`, `Split_id`: checked ids with stable forms.
