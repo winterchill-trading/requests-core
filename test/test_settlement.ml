@@ -34,9 +34,9 @@ let%expect_test "a request payment books hold, capture and deposit" =
     [%message
       ""
         ~outgoing:(booked.outgoing.id : Payments_core.Transfer.Id.t)
-        (booked.outgoing.status : Payments_core.Transfer.Status.t)
+        ~outgoing_status:(booked.outgoing.status : Payments_core.Transfer.Status.t)
         ~incoming:(booked.incoming.id : Payments_core.Transfer.Id.t)
-        (booked.incoming.status : Payments_core.Transfer.Status.t)];
+        ~incoming_status:(booked.incoming.status : Payments_core.Transfer.Status.t)];
   Ledger.Trial_balance.of_balances b |> Ledger.Trial_balance.check |> Or_error.ok_exn;
   [%expect
     {|
@@ -53,8 +53,8 @@ let%expect_test "a request payment books hold, capture and deposit" =
     customer:bob/eur                     37.50 EUR
     customer:alice/eur                   12.50 EUR
     settlement:intraledger/EUR           0.00 EUR
-    ((outgoing request:r1/out) (booked.outgoing.status Settled)
-     (incoming request:r1/in) (booked.incoming.status Settled))
+    ((outgoing request:r1/out) (outgoing_status Settled) (incoming request:r1/in)
+     (incoming_status Settled))
     |}]
 ;;
 
@@ -85,8 +85,7 @@ let%expect_test "insufficient funds is a typed refusal" =
       (Settlement.book b i ~authorization ~at:(after_min 1) |> Result.is_ok : bool)];
   [%expect
     {|
-    (Error
-     (Insufficient_funds (available "10.00 EUR") (required "12.50 EUR")))
+    (Error (Insufficient_funds (available "10.00 EUR") (required "12.50 EUR")))
     false
     |}]
 ;;
