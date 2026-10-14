@@ -35,3 +35,6 @@ module Refusal = Refusal
 
 (** Notices for customers, as values. *)
 module Notice = Notice
+
+(** Paying a request or a link as an intraledger transfer. *)
+module Settlement = Settlement
