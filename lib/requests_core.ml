@@ -47,3 +47,6 @@ module Link_token = Link_token
 
 (** Payment links and their public view. *)
 module Link = Link
+
+(** Bill splits over money requests. *)
+module Split = Split
