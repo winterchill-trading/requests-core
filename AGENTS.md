@@ -31,9 +31,8 @@ DUNE_BUILD_DIR=../_build-requests-core opam exec --switch 5.2.0+ox -- dune build
 ```
 
 The last line is for parallel work: a private build directory avoids the lock shared
-with other repositories in the workspace. Errors from a sibling being edited at the same
-moment can stop the build; check that the error's file is in this repository or one of
-its dependencies before acting on it.
+with other repositories in the workspace. A sibling being edited can break the build;
+check which repository an error's file is in before acting on it.
 
 Standalone (outside the workspace), pin the siblings from GitHub as the CI workflow
 does, then build:
