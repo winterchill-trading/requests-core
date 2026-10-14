@@ -73,7 +73,7 @@ let%expect_test "a single-use fixed link: one payment completes it" =
   [%expect
     {|
     ((Unavailable Completed) ((own false) (paid true)))
-    (already_paid Already_paid)
+    (link_not_active (Link_not_active Completed))
     (link_not_active (Link_not_active Completed))
     |}]
 ;;
@@ -179,4 +179,24 @@ let%test_unit "the public view carries only name, amount, currency and note" =
     [%test_pred: string]
       (fun text -> not (String.is_substring text ~substring:secret))
       text)
+;;
+
+let%expect_test "a revoked or expired link reports its status before already paid" =
+  let l = link ~usage:(Multi_use { max_uses = None }) ~lifetime:One_day () |> ok in
+  let l = (pay ~amount:(eur "5.00") l bob ~min:1 |> ok).link in
+  print_refusal (pay ~amount:(eur "5.00") l bob ~min:2);
+  (* Past its lifetime: expired, for the payer who paid and for anyone else. *)
+  print_refusal (pay ~amount:(eur "5.00") l bob ~min:(60 * 25));
+  print_refusal (pay ~amount:(eur "5.00") l carol ~min:(60 * 25));
+  let l = Link.revoke l ~by:alice.customer ~now:(after_min 3) |> ok in
+  print_refusal (pay ~amount:(eur "5.00") l bob ~min:4);
+  print_refusal (pay ~amount:(eur "5.00") l carol ~min:4);
+  [%expect
+    {|
+    (already_paid Already_paid)
+    (link_not_active (Link_not_active Expired))
+    (link_not_active (Link_not_active Expired))
+    (link_not_active (Link_not_active Revoked))
+    (link_not_active (Link_not_active Revoked))
+    |}]
 ;;
