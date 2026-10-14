@@ -14,3 +14,6 @@ module Link_id = Link_id
 
 (** A bill split. *)
 module Split_id = Split_id
+
+(** Short normalised text: notes and titles. *)
+module Note = Note
