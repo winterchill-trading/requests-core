@@ -1,0 +1,8 @@
+(library
+ (name requests_core_test)
+ (libraries core base_quickcheck money ledger payments-core requests-core)
+ (inline_tests
+  (flags
+   (:standard -source-tree-root .)))
+ (preprocess
+  (pps ppx_jane)))
