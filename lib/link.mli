@@ -59,7 +59,7 @@ type t = private
   ; usage : Usage.t
   ; created_at : Payments_core.Utc_time.t
   ; expires_at : Payments_core.Utc_time.t
-  ; status : Link_status.t (** as stored: never [Expired]; see {!status} *)
+  ; status : Link_status.t (** as stored: never [Expired]; see {!val-status} *)
   ; closed_at : Payments_core.Utc_time.t option (** when completed or revoked *)
   ; payments : Payment.t list (** oldest first *)
   }

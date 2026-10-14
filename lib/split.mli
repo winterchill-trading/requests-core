@@ -106,7 +106,7 @@ module Summary : sig
 end
 
 (** The split's state from its share requests at [now] (expiry is read as with
-    {!Request.status}). Fails when a share's request is missing from [requests]. *)
+    {!Request.val-status}). Fails when a share's request is missing from [requests]. *)
 val summary : t -> requests:Request.t list -> now:Time_ns.t -> Summary.t Or_error.t
 
 (** Reminds every pending share that may be reminded now; the steps are the requests'

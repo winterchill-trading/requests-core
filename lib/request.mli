@@ -7,7 +7,7 @@
     new value, books the settlement and stores the notices in one transaction, or drops
     all three.
 
-    A pending request reads as [Expired] as soon as its lifetime has passed ({!status}),
+    A pending request reads as [Expired] as soon as its lifetime has passed ({!val-status}),
     whether or not {!expire} has been applied and stored yet. *)
 
 open! Core
@@ -30,7 +30,7 @@ type t = private
   ; amount : Money.Amount.t (** positive *)
   ; note : Note.t option
   ; split : Split_id.t option (** the split this request is a share of, if any *)
-  ; status : Request_status.t (** as stored; see {!status} for the current one *)
+  ; status : Request_status.t (** as stored; see {!val-status} for the current one *)
   ; created_at : Payments_core.Utc_time.t
   ; expires_at : Payments_core.Utc_time.t
   ; reminders : int (** reminders sent so far *)
